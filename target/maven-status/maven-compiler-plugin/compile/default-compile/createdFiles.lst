@@ -1,0 +1,16 @@
+com/fetal/lootr/storage/PlayerLootData.class
+com/fetal/lootr/config/ConfigManager.class
+com/fetal/lootr/listeners/BlockListener.class
+com/fetal/lootr/utils/ChestUtils.class
+com/fetal/lootr/api/LootrAPI.class
+com/fetal/lootr/commands/LootrCommand.class
+com/fetal/lootr/storage/StorageManager.class
+com/fetal/lootr/compat/DatapackCompatibility.class
+com/fetal/lootr/listeners/InventoryListener.class
+com/fetal/lootr/commands/CustomChestCommand.class
+com/fetal/lootr/utils/MessageUtils.class
+com/fetal/lootr/compat/DatapackCompatibility$LootTableInfo.class
+com/fetal/lootr/storage/PlayerLootData$ChestLoot.class
+com/fetal/lootr/storage/StorageManager$ChestData.class
+com/fetal/lootr/listeners/ChestListener.class
+com/fetal/lootr/LootrPlugin.class

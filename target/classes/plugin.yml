@@ -1,0 +1,35 @@
+name: Lootr
+version: '1.0.0'
+main: com.fetal.lootr.LootrPlugin
+api-version: '1.18'  
+author: FeTal
+description: Per-player instanced loot chests with full datapack compatibility! (1.18-1.21)
+
+commands:
+  lootr:
+    description: Main Lootr command
+    usage: /lootr <reload|convert|custom|refresh|debug>
+    permission: lootr.admin
+    aliases: [loot]
+  customchest:
+    description: Create a custom Lootr chest
+    usage: /customchest
+    permission: lootr.custom
+  lootrdebug:
+    description: Debug datapack loot tables
+    usage: /lootrdebug
+    permission: lootr.admin
+
+permissions:
+  lootr.admin:
+    description: Admin access to Lootr
+    default: op
+  lootr.custom:
+    description: Create custom chests
+    default: op
+  lootr.break:
+    description: Allow breaking Lootr chests
+    default: op
+  lootr.bypass:
+    description: Bypass all restrictions
+    default: op

@@ -1,0 +1,64 @@
+# ═══════════════════════════════════════════════════
+#                    LOOTR CONFIG
+#
+#                    Author: FeTal
+# ═══════════════════════════════════════════════════
+
+settings:
+  debug: false
+  auto-convert: true
+  particles: true
+  sounds: true
+  
+  enabled-worlds: []
+  blacklisted-worlds:
+    - "world_creative"
+
+datapack:
+  enabled: true
+  auto-scan: true
+  allow-custom-namespaces: true
+  debug-tables: false
+  fallback-to-vanilla: true
+  
+  compatibility:
+    better-dungeons: true
+    better-mineshafts: true
+    additional-structures: true
+    dungeon-crawl: true
+    repurposed-structures: true
+    mo-structures: true
+    dungeons-and-taverns: true
+    nova_structures: true
+
+visual:
+  use-colored-blocks: true
+  unopened-particle: "GOLD"
+  opened-particle: "WATER"
+
+loot:
+  whitelisted-tables: []
+  blacklisted-tables:
+    - "minecraft:chests/spawn_bonus_chest"
+  refresh-hours: 0
+  decay-hours: 0
+
+protection:
+  prevent-break: true
+  prevent-hopper: true
+  prevent-explosion: true
+  require-permission-to-break: false
+  break-warning: "&c&l[!] &eThis chest is instanced per-player. Sneak + break to remove."
+
+mmessages:
+  prefix: "&6&l[Lootr] &r"
+  open-first: "&a✦ You discovered a loot chest!"
+  already-opened: "&7This chest is now empty for you."
+  chest-emptied: "&cThis chest has been emptied."
+  decayed: "&cThis chest has decayed..."
+  refreshed: "&aThe chest contents have refreshed!"
+  no-permission: "&cYou don't have permission to do this."
+  custom-created: "&aCustom Lootr chest created!"
+  convert-success: "&aConverted &e%count% &achests in radius!"
+  datapack-detected: "&aDatapack loot table detected: &e%table%"
+  converted-normal: "&7This chest is now a normal chest for you."
