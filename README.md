@@ -1,62 +1,50 @@
-# Lootr
+# 🎁 LootrPlugin
 
-**Per-player loot chests for Paper servers. No more loot stealing!**
+**Per-player unique loot from structure chests — Minecraft Lootr Mod for Spigot/Paper!**
 
-Inspired by the [Lootr Mod](https://modrinth.com/mod/lootr). Every player gets their own unique loot from structure chests.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20+-green.svg)](https://www.spigotmc.org/)
+[![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/)
 
-## Features
+---
 
-- 🎁 **Per-player loot** - Same chest, different loot for each player
-- 🏛️ **Structure support** - Dungeons, temples, mansions, and more
-- 📦 **Datapack compatible** - Works with custom structure datapacks
-- 🔒 **Protected** - Anti-break, anti-hopper, anti-explosion
-- 🛡️ **Gamemode protection** - Survival/Adventure players cannot break chests
-- ⚡ **OP Double-break** - OP/Admins must break twice to confirm destruction
-- ⚡ **1.18 - 1.21** - Full Paper compatibility
+## 📖 Overview
 
-## How It Works
+LootrPlugin brings the popular **Lootr mod functionality** to Spigot/Paper servers. Each player gets their own unique loot from naturally generated structure chests (temples, dungeons, ancient cities, etc.) — no more rushing to loot chests first!
 
-1. Find a chest in any structure
-2. Open it → Get unique loot
-3. Other players open same chest → Get their own loot
-4. For you, it becomes a normal chest after first open
-5. Chest stays protected so other players can still use it
+### ✨ Key Features
 
-## Commands
+- 🎲 **Per-Player Loot** — Each player sees different items in the same chest
+- 🏛️ **Structure Detection** — Automatically detects temple/dungeon/ancient city chests
+- 💾 **Persistent Storage** — Loot saved across server restarts
+- 🔒 **Full Protection** — Prevents breaking, explosions, hopper extraction, piston movement
+- 🎨 **Visual Effects** — Particle indicators on unopened chests
+- ⚙️ **Highly Configurable** — 20+ config options
+- 🛡️ **Admin Tools** — Complete command suite for management
 
-| Command | Permission | Description |
-|---------|------------|-------------|
-| `/lootr` | `lootr.admin` | Main admin command |
-| `/lootr reload` | `lootr.admin` | Reload config and datapacks |
-| `/lootr convert` | `lootr.admin` | Convert nearby chests to Lootr |
-| `/lootr custom` | `lootr.admin` | Create custom Lootr chest |
-| `/lootr debug` | `lootr.admin` | Debug datapack loot tables |
-| `/customchest` | `lootr.custom` | Shortcut to create custom chest |
+---
 
-## Permissions
+## 🚀 Installation
 
-- `lootr.admin` - Full admin access
-- `lootr.custom` - Create custom chests
-- `lootr.break` - Break Lootr chests
-- `lootr.bypass` - Bypass all restrictions
+1. **Download** the latest `LootrPlugin-1.0.0.jar` from [Releases](https://github.com/Sunnymittal112/LootrPlugin/releases)
+2. **Place** the JAR in your server's `plugins/` folder
+3. **Restart** the server
+4. **Configure** `plugins/LootrPlugin/config.yml` (optional)
 
-## Config
+### Requirements
+- **Minecraft Version:** 1.20+
+- **Server Software:** Spigot, Paper, Purpur
+- **Java Version:** 17 or higher
 
-```yaml
-settings:
-  auto-convert: true
-  particles: true
-  sounds: true
-  
-loot:
-  refresh-hours: 0  # 0 = one time per player
-  
-protection:
-  prevent-break: true           # Prevent breaking in Survival/Adventure
-  require-permission-to-break: false
-  op-double-break: true         # OP must break twice to confirm
-  prevent-hopper: true          # Prevent hopper extraction
-  prevent-explosion: true       # Prevent explosion damage
-  
-messages:
-  break-warning: "&c&l[!] &eThis chest is instanced per-player. You cannot break it!"
+---
+
+## 🎮 How It Works
+
+### Player Experience
+
+1. **Player A** finds a desert temple chest
+2. Opens it → Gets random loot (e.g., 3 diamonds, 5 iron ingots)
+3. **Player B** opens the *same* chest → Gets *different* loot (e.g., 1 emerald, 8 gold ingots)
+4. **Player A** reopens → Sees the *same* items as before (3 diamonds, 5 iron)
+
+### Technical Flow
