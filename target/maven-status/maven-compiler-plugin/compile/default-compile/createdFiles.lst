@@ -1,0 +1,7 @@
+com\fetal\lootr\commands\LootrCommand.class
+com\fetal\lootr\manager\LootManager$ChestData.class
+com\fetal\lootr\LootrHolder.class
+com\fetal\lootr\manager\LootManager.class
+com\fetal\lootr\listeners\ChestProtectionListener.class
+com\fetal\lootr\listeners\ChestListener.class
+com\fetal\lootr\LootrPlugin.class
