@@ -8,12 +8,14 @@ import org.bukkit.inventory.InventoryHolder;
 public class LootrHolder implements InventoryHolder {
 
     private final String chestKey;
-    private final UUID ownerUuid;
+    private final UUID viewerUuid;
+    private final UUID storageUuid;
     private Inventory inventory;
 
-    public LootrHolder(String chestKey, UUID ownerUuid) {
+    public LootrHolder(String chestKey, UUID viewerUuid, UUID storageUuid) {
         this.chestKey = chestKey;
-        this.ownerUuid = ownerUuid;
+        this.viewerUuid = viewerUuid;
+        this.storageUuid = storageUuid;
     }
 
     @Override
@@ -29,7 +31,11 @@ public class LootrHolder implements InventoryHolder {
         return chestKey;
     }
 
-    public UUID getOwnerUuid() {
-        return ownerUuid;
+    public UUID getViewerUuid() {
+        return viewerUuid;
+    }
+
+    public UUID getStorageUuid() {
+        return storageUuid;
     }
 }

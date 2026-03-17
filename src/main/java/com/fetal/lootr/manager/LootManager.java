@@ -17,7 +17,10 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -25,11 +28,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.loot.LootContext;
+import org.bukkit.loot.LootTable;
+import org.bukkit.loot.Lootable;
 
 import com.fetal.lootr.LootrHolder;
 import com.fetal.lootr.LootrPlugin;
 
 public class LootManager {
+
+    private static final UUID SHARED_LOOT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private final LootrPlugin plugin;
     private final Map<String, ChestData> registeredChests = new ConcurrentHashMap<>();
@@ -108,40 +116,84 @@ public class LootManager {
         ChestData data = registeredChests.get(chestKey);
         if (data == null) return null;
 
-        UUID lookupId = plugin.isPerPlayerLoot()
-                ? player.getUniqueId()
-                : UUID.fromString("00000000-0000-0000-0000-000000000000");
-
-        LootrHolder holder = new LootrHolder(chestKey, player.getUniqueId());
+        UUID storageId = getStorageId(player.getUniqueId());
+        LootrHolder holder = new LootrHolder(chestKey, player.getUniqueId(), storageId);
         Inventory inv = Bukkit.createInventory(holder, data.invSize, plugin.getInventoryTitle());
         holder.setInventory(inv);
 
         Map<UUID, ItemStack[]> chestMap = playerLoot.get(chestKey);
-
-        if (chestMap != null && chestMap.containsKey(lookupId)) {
-            ItemStack[] saved = chestMap.get(lookupId);
+        if (chestMap != null && chestMap.containsKey(storageId)) {
+            ItemStack[] saved = chestMap.get(storageId);
             ItemStack[] contents = new ItemStack[data.invSize];
             for (int i = 0; i < Math.min(saved.length, data.invSize); i++) {
                 contents[i] = saved[i] != null ? saved[i].clone() : null;
             }
             inv.setContents(contents);
+        } else if (generateLoot(inv, data, chestKey, player, storageId)) {
+            savePlayerLoot(chestKey, storageId, inv.getContents());
         } else {
-            generateLoot(inv, data, chestKey, player);
-            savePlayerLoot(chestKey, lookupId, inv.getContents());
+            return null;
         }
 
         return inv;
     }
 
-    private boolean generateLoot(Inventory inv, ChestData data, String chestKey, Player player) {
+    public UUID getStorageId(UUID playerUUID) {
+        return plugin.isPerPlayerLoot() ? playerUUID : SHARED_LOOT_ID;
+    }
+
+    private boolean generateLoot(Inventory inv, ChestData data, String chestKey, Player player, UUID storageId) {
         try {
-            // For now, just leave inventory empty - loot tables require deeper NMS integration
-            // This prevents breaking the plugin while maintaining plugin state
+            NamespacedKey lootTableKey = NamespacedKey.fromString(data.lootTableKey);
+            if (lootTableKey == null) {
+                plugin.getLogger().warning("Invalid loot table key for " + chestKey + ": " + data.lootTableKey);
+                return false;
+            }
+
+            LootTable lootTable = Bukkit.getLootTable(lootTableKey);
+            if (lootTable == null) {
+                plugin.getLogger().warning("Missing loot table for " + chestKey + ": " + data.lootTableKey);
+                return false;
+            }
+
+            Location lootLocation = toLocation(chestKey);
+            if (lootLocation == null) {
+                lootLocation = player.getLocation();
+            }
+
+            LootContext context = new LootContext.Builder(lootLocation)
+                    .luck(getPlayerLuck(player))
+                    .lootedEntity(player)
+                    .killer(player)
+                    .build();
+
+            lootTable.fillInventory(inv, createLootRandom(data, chestKey, storageId), context);
             return true;
         } catch (Exception e) {
-            plugin.getLogger().warning("Failed to generate loot for " + chestKey + ": " + e.getMessage());
-            return true; // Still allow chest to open
+            String message = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            if (!isRecoverableLootContextFailure(message)) {
+                plugin.getLogger().warning(
+                        "Failed to generate loot for " + chestKey + " using " + data.lootTableKey + ": " + message
+                );
+            }
+            return false;
         }
+    }
+
+    private boolean isRecoverableLootContextFailure(String message) {
+        return message != null && message.contains("Missing required parameters");
+    }
+
+    private Random createLootRandom(ChestData data, String chestKey, UUID storageId) {
+        long seed = data.seed != 0L ? data.seed : chestKey.hashCode();
+        seed = (31L * seed) ^ storageId.getMostSignificantBits();
+        seed = (31L * seed) ^ storageId.getLeastSignificantBits();
+        return new Random(seed);
+    }
+
+    private float getPlayerLuck(Player player) {
+        AttributeInstance attribute = player.getAttribute(Attribute.LUCK);
+        return attribute != null ? (float) attribute.getValue() : 0.0f;
     }
 
     public void savePlayerLoot(String chestKey, UUID playerUUID, ItemStack[] contents) {
@@ -155,7 +207,7 @@ public class LootManager {
 
     public boolean hasPlayerLooted(String chestKey, UUID playerUUID) {
         Map<UUID, ItemStack[]> map = playerLoot.get(chestKey);
-        return map != null && map.containsKey(playerUUID);
+        return map != null && map.containsKey(getStorageId(playerUUID));
     }
 
     // Stats
@@ -203,6 +255,27 @@ public class LootManager {
     public int resetChest(String chestKey) {
         Map<UUID, ItemStack[]> map = playerLoot.remove(chestKey);
         return map != null ? map.size() : 0;
+    }
+
+    public boolean restoreVanillaLoot(String chestKey) {
+        ChestData data = registeredChests.get(chestKey);
+        if (data == null) return false;
+
+        NamespacedKey lootTableKey = NamespacedKey.fromString(data.lootTableKey);
+        if (lootTableKey == null) return false;
+
+        LootTable lootTable = Bukkit.getLootTable(lootTableKey);
+        if (lootTable == null) return false;
+
+        Location location = toLocation(chestKey);
+        if (location == null) return false;
+
+        BlockState state = location.getBlock().getState();
+        if (!(state instanceof Lootable lootable)) return false;
+
+        lootable.setLootTable(lootTable);
+        lootable.setSeed(data.seed);
+        return state.update(true, false);
     }
 
     // Particles with shop exclusion

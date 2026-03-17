@@ -61,6 +61,7 @@ public class ChestListener implements Listener {
 
         Player player = event.getPlayer();
         String chestKey = lootManager.toKey(block.getLocation());
+        boolean justRegistered = false;
 
         // QuickShop compatibility check
         if (plugin.isIgnoreQuickShop() && isQuickShopChest(block)) {
@@ -131,30 +132,38 @@ public class ChestListener implements Listener {
                     ((Container) fresh).getInventory().clear();
                 }
 
-                plugin.incrementChestsRegistered();
                 plugin.debug("Registered: " + chestKey);
-
-                event.setCancelled(true);
+                justRegistered = true;
             }
         }
 
         // Open per-player inventory
         if (lootManager.isRegistered(chestKey)) {
-            event.setCancelled(true);
-
             boolean firstTime = !lootManager.hasPlayerLooted(chestKey, player.getUniqueId());
 
             Inventory inv = lootManager.getOrCreateLoot(chestKey, player);
             if (inv == null) {
+                if (lootManager.restoreVanillaLoot(chestKey)) {
+                    lootManager.unregisterChest(chestKey);
+                    plugin.getLogger().info("Falling back to vanilla loot for " + chestKey);
+                    return;
+                }
+
+                event.setCancelled(true);
                 player.sendMessage(plugin.getPrefix() + "\u00A7cError!");
                 return;
             }
+
+            event.setCancelled(true);
 
             if (plugin.isPlaySound()) {
                 player.playSound(block.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
             }
 
             if (firstTime) {
+                if (justRegistered) {
+                    plugin.incrementChestsRegistered();
+                }
                 player.sendMessage(plugin.getPrefix() + plugin.getMsgFirstOpen());
                 plugin.incrementLootsGenerated();
             } else {
@@ -219,12 +228,12 @@ public class ChestListener implements Listener {
             LootrHolder holder = (LootrHolder) inv.getHolder();
             Player player = (Player) event.getPlayer();
 
-            if (!player.getUniqueId().equals(holder.getOwnerUuid())) {
+            if (!player.getUniqueId().equals(holder.getViewerUuid())) {
                 plugin.debug("Skipped save for non-owner close: " + player.getName());
                 return;
             }
 
-            lootManager.savePlayerLoot(holder.getChestKey(), holder.getOwnerUuid(), inv.getContents());
+            lootManager.savePlayerLoot(holder.getChestKey(), holder.getStorageUuid(), inv.getContents());
 
             if (plugin.isPlaySound()) {
                 player.playSound(player.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
@@ -234,3 +243,4 @@ public class ChestListener implements Listener {
         }
     }
 }
+

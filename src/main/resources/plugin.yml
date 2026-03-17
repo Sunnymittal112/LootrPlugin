@@ -1,7 +1,7 @@
 name: LootrPlugin
 version: ${project.version}
 main: com.fetal.lootr.LootrPlugin
-api-version: '1.20'
+api-version: '1.21.11'
 description: Per-player unique loot from structure chests with shop plugin compatibility
 author: FeTaL
 
@@ -32,3 +32,4 @@ permissions:
   lootr.use:
     description: Can use Lootr chests
     default: true
+
