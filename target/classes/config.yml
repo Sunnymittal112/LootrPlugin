@@ -50,6 +50,7 @@ protection:
   prevent-piston: true
   break-confirm-time: 3
   exclude-shop-protection: true
+  bypass-protection: true
 
 visuals:
   particles-enabled: true

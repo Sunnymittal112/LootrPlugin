@@ -48,7 +48,7 @@ public class ChestListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onChestOpen(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (event.getHand() != EquipmentSlot.HAND) return;
@@ -59,8 +59,34 @@ public class ChestListener implements Listener {
         BlockState state = block.getState();
         if (!(state instanceof Container)) return;
 
-        Player player = event.getPlayer();
         String chestKey = lootManager.toKey(block.getLocation());
+
+        // Protection bypass logic
+        if (event.isCancelled() && plugin.isBypassProtection()) {
+            boolean isLootr = lootManager.isRegistered(chestKey);
+
+            // Check if it's a potential Lootr chest (vanilla with loot table)
+            if (!isLootr && state instanceof Lootable) {
+                if (((Lootable) state).getLootTable() != null) {
+                    isLootr = true;
+                }
+            }
+
+            if (isLootr) {
+                // Verify it's not a shop or other ignored chest before bypassing
+                if (!(plugin.isIgnoreQuickShop() && isQuickShopChest(block)) && 
+                    !isMetadataIgnored(block) && 
+                    !isNameIgnored((Container) state)) {
+                    
+                    event.setCancelled(false);
+                    plugin.debug("Bypassed protection for: " + chestKey);
+                }
+            }
+        }
+
+        if (event.isCancelled()) return;
+
+        Player player = event.getPlayer();
         boolean justRegistered = false;
 
         // QuickShop compatibility check
@@ -73,25 +99,13 @@ public class ChestListener implements Listener {
         }
 
         // Check for other metadata
-        if (plugin.isIgnoreMetadataChests()) {
-            for (String meta : plugin.getMetadataBlacklist()) {
-                if (block.hasMetadata(meta)) {
-                    plugin.debug("Ignoring chest with metadata: " + meta);
-                    return;
-                }
-            }
+        if (isMetadataIgnored(block)) {
+            return;
         }
 
         // Check custom name
-        Container container = (Container) state;
-        String customName = container.getCustomName();
-        if (customName != null) {
-            for (String nameCheck : plugin.getIgnoreChestNames()) {
-                if (customName.contains(nameCheck)) {
-                    plugin.debug("Ignoring chest with name containing: " + nameCheck);
-                    return;
-                }
-            }
+        if (isNameIgnored((Container) state)) {
+            return;
         }
 
         // Bypass check
@@ -117,7 +131,7 @@ public class ChestListener implements Listener {
 
                 String lootTableKey = lootable.getLootTable().getKey().toString();
                 long seed = lootable.getSeed();
-                int invSize = container.getInventory().getSize();
+                int invSize = ((Container) state).getInventory().getSize();
 
                 lootManager.registerChest(chestKey, lootTableKey, seed, invSize);
 
@@ -215,6 +229,37 @@ public class ChestListener implements Listener {
             }
         }
 
+        return false;
+    }
+
+    /**
+     * Check if a block should be ignored based on metadata.
+     */
+    private boolean isMetadataIgnored(Block block) {
+        if (plugin.isIgnoreMetadataChests()) {
+            for (String meta : plugin.getMetadataBlacklist()) {
+                if (block.hasMetadata(meta)) {
+                    plugin.debug("Ignoring chest with metadata: " + meta);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if a chest should be ignored based on its custom name.
+     */
+    private boolean isNameIgnored(Container container) {
+        String customName = container.getCustomName();
+        if (customName != null) {
+            for (String nameCheck : plugin.getIgnoreChestNames()) {
+                if (customName.contains(nameCheck)) {
+                    plugin.debug("Ignoring chest with name containing: " + nameCheck);
+                    return true;
+                }
+            }
+        }
         return false;
     }
 

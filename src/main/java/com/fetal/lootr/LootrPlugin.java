@@ -35,6 +35,7 @@ public class LootrPlugin extends JavaPlugin {
     private boolean preventExplosion;
     private boolean preventPiston;
     private int breakConfirmTime;
+    private boolean bypassProtection;
     private boolean particlesEnabled;
     private String particleType;
     private boolean particlesOnlyUnlooted;
@@ -175,6 +176,7 @@ public class LootrPlugin extends JavaPlugin {
         preventExplosion = config.getBoolean("protection.prevent-explosion", true);
         preventPiston = config.getBoolean("protection.prevent-piston", true);
         breakConfirmTime = config.getInt("protection.break-confirm-time", 3);
+        bypassProtection = config.getBoolean("protection.bypass-protection", true);
 
         particlesEnabled = config.getBoolean("visuals.particles-enabled", true);
         particleType = config.getString("visuals.particle-type", "VILLAGER_HAPPY");
@@ -224,7 +226,7 @@ public class LootrPlugin extends JavaPlugin {
 
     private void printBanner() {
         getLogger().info("╔═══════════════════════════════════════╗");
-        getLogger().info("║          LootrPlugin v1.2.2" + getDescription().getVersion() + "      ║");
+        getLogger().info("║          LootrPlugin v1.2.3" + getDescription().getVersion() + "      ║");
         getLogger().info("║            Author: FeTaL              ║");
         getLogger().info("╠═══════════════════════════════════════╣");
         getLogger().info("║                                       ║");
@@ -272,6 +274,7 @@ public class LootrPlugin extends JavaPlugin {
     public boolean isPreventExplosion() { return preventExplosion; }
     public boolean isPreventPiston() { return preventPiston; }
     public int getBreakConfirmTime() { return breakConfirmTime; }
+    public boolean isBypassProtection() { return bypassProtection; }
     public boolean isParticlesEnabled() { return particlesEnabled; }
     public String getParticleType() { return particleType; }
     public boolean isParticlesOnlyUnlooted() { return particlesOnlyUnlooted; }
