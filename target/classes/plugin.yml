@@ -1,7 +1,7 @@
 name: LootrPlugin
-version: 1.2.2
+version: 1.2.3
 main: com.fetal.lootr.LootrPlugin
-api-version: '1.21.11'
+api-version: '26.1.2'
 description: Per-player unique loot from structure chests with shop plugin compatibility
 author: FeTaL
 

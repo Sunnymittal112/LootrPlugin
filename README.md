@@ -19,6 +19,18 @@ When a player opens a Lootr chest, the plugin generates a unique inventory speci
 4. (Optional) Customize the settings in 'plugins/LootrPlugin/config.yml'.
 5. Use '/lootr reload' to apply any changes made to the configuration.
 
+## Version Support
+The plugin now targets the Paper API for version 26.1.2.
+
+What was changed:
+* Maven now compiles against `io.papermc.paper:paper-api:26.1.2.build.60-stable`.
+* `plugin.yml` now declares `api-version: '26.1.2'`.
+
+Compatibility note:
+* This codebase only uses stable Bukkit/Paper APIs and no NMS internals, so it is a strong candidate for running on later 26.x server builds.
+* Actual compatibility for future builds such as 26.2.x or 26.3.x still depends on Paper keeping those APIs binary-compatible.
+* The repository has been updated and validated against the currently published stable 26.1.2 Paper API.
+
 ## Patch Update - May 5, 2026
 
 ### Feature: Claim Protection Bypass
