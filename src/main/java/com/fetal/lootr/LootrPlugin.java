@@ -226,7 +226,7 @@ public class LootrPlugin extends JavaPlugin {
 
     private void printBanner() {
         getLogger().info("╔═══════════════════════════════════════╗");
-        getLogger().info("║          LootrPlugin v1.2.4" + getDescription().getVersion() + "      ║");
+        getLogger().info("║          LootrPlugin v1.2.5" + getDescription().getVersion() + "      ║");
         getLogger().info("║            Author: FeTaL              ║");
         getLogger().info("╠═══════════════════════════════════════╣");
         getLogger().info("║                                       ║");
