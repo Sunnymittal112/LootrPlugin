@@ -24,6 +24,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -34,6 +35,7 @@ import org.bukkit.loot.Lootable;
 
 import com.fetal.lootr.LootrHolder;
 import com.fetal.lootr.LootrPlugin;
+import com.fetal.lootr.util.VersionCompat;
 
 public class LootManager {
 
@@ -118,7 +120,7 @@ public class LootManager {
 
         UUID storageId = getStorageId(player.getUniqueId());
         LootrHolder holder = new LootrHolder(chestKey, player.getUniqueId(), storageId);
-        Inventory inv = Bukkit.createInventory(holder, data.invSize, plugin.getInventoryTitle());
+        Inventory inv = VersionCompat.createInventory(holder, data.invSize, plugin.getInventoryTitle());
         holder.setInventory(inv);
 
         Map<UUID, ItemStack[]> chestMap = playerLoot.get(chestKey);
@@ -161,11 +163,7 @@ public class LootManager {
                 lootLocation = player.getLocation();
             }
 
-            LootContext context = new LootContext.Builder(lootLocation)
-                    .luck(getPlayerLuck(player))
-                    .lootedEntity(player)
-                    .killer(player)
-                    .build();
+            LootContext context = buildLootContext(lootLocation, player);
 
             lootTable.fillInventory(inv, createLootRandom(data, chestKey, storageId), context);
             return true;
@@ -178,6 +176,24 @@ public class LootManager {
             }
             return false;
         }
+    }
+
+    private LootContext buildLootContext(Location lootLocation, Player player) {
+        LootContext.Builder builder = new LootContext.Builder(lootLocation).luck(getPlayerLuck(player));
+
+        try {
+            builder.lootedEntity(player);
+        } catch (NoSuchMethodError | NoClassDefFoundError ignored) {
+            // Older server APIs may not expose this builder hook.
+        }
+
+        try {
+            builder.killer(player);
+        } catch (NoSuchMethodError | NoClassDefFoundError ignored) {
+            // Older server APIs may not expose this builder hook.
+        }
+
+        return builder.build();
     }
 
     private boolean isRecoverableLootContextFailure(String message) {
@@ -270,12 +286,39 @@ public class LootManager {
         Location location = toLocation(chestKey);
         if (location == null) return false;
 
-        BlockState state = location.getBlock().getState();
-        if (!(state instanceof Lootable lootable)) return false;
+        Lootable lootable = findLootableAt(location);
+        if (lootable == null) return false;
 
         lootable.setLootTable(lootTable);
         lootable.setSeed(data.seed);
-        return state.update(true, false);
+
+        BlockState state = location.getBlock().getState();
+        if (state instanceof Lootable) {
+            return state.update(true, false);
+        }
+
+        return true;
+    }
+
+    private Lootable findLootableAt(Location location) {
+        BlockState state = location.getBlock().getState();
+        if (state instanceof Lootable lootable) {
+            return lootable;
+        }
+
+        if (location.getWorld() == null) {
+            return null;
+        }
+
+        for (Entity entity : location.getWorld().getNearbyEntities(location, 0.5, 0.5, 0.5)) {
+            if (entity instanceof Lootable lootable && entity.getLocation().getBlockX() == location.getBlockX()
+                    && entity.getLocation().getBlockY() == location.getBlockY()
+                    && entity.getLocation().getBlockZ() == location.getBlockZ()) {
+                return lootable;
+            }
+        }
+
+        return null;
     }
 
     // Particles with shop exclusion

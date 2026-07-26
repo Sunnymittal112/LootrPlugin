@@ -6,11 +6,13 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -19,6 +21,7 @@ import org.bukkit.loot.Lootable;
 import com.fetal.lootr.LootrHolder;
 import com.fetal.lootr.LootrPlugin;
 import com.fetal.lootr.manager.LootManager;
+import com.fetal.lootr.util.VersionCompat;
 
 public class ChestListener implements Listener {
 
@@ -45,6 +48,77 @@ public class ChestListener implements Listener {
             } catch (Exception e) {
                 plugin.getLogger().warning("QuickShop API loading failed: " + e.getMessage());
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onMinecartChestInteract(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return;
+        if (!(event.getRightClicked() instanceof StorageMinecart minecartChest)) return;
+
+        Player player = event.getPlayer();
+        String chestKey = lootManager.toKey(minecartChest.getLocation());
+
+        if (event.isCancelled()) {
+            return;
+        }
+
+        if (player.hasPermission("lootr.bypass")) return;
+        if (plugin.isWorldDisabled(minecartChest.getWorld().getName())) return;
+
+        boolean justRegistered = false;
+        if (minecartChest instanceof Lootable lootable) {
+            if (lootable.getLootTable() != null) {
+                if (lootManager.getRegisteredChestCount() >= plugin.getMaxTrackedChests()) {
+                    plugin.getLogger().warning("Max chests reached!");
+                    return;
+                }
+
+                String lootTableKey = lootable.getLootTable().getKey().toString();
+                long seed = lootable.getSeed();
+                int invSize = minecartChest.getInventory().getSize();
+
+                lootManager.registerChest(chestKey, lootTableKey, seed, invSize);
+                lootable.setLootTable(null);
+                lootable.setSeed(0);
+                minecartChest.getInventory().clear();
+
+                plugin.debug("Registered minecart chest: " + chestKey);
+                justRegistered = true;
+            }
+        }
+
+        if (lootManager.isRegistered(chestKey)) {
+            boolean firstTime = !lootManager.hasPlayerLooted(chestKey, player.getUniqueId());
+            Inventory inv = lootManager.getOrCreateLoot(chestKey, player);
+            if (inv == null) {
+                if (lootManager.restoreVanillaLoot(chestKey)) {
+                    lootManager.unregisterChest(chestKey);
+                    plugin.getLogger().info("Falling back to vanilla loot for " + chestKey);
+                    return;
+                }
+
+                event.setCancelled(true);
+                player.sendMessage(plugin.getPrefix() + "§cError!");
+                return;
+            }
+
+            event.setCancelled(true);
+            if (plugin.isPlaySound()) {
+                VersionCompat.playSound(player, minecartChest.getLocation(), "BLOCK_CHEST_OPEN", 1.0f, 1.0f);
+            }
+
+            if (firstTime) {
+                if (justRegistered) {
+                    plugin.incrementChestsRegistered();
+                }
+                player.sendMessage(plugin.getPrefix() + plugin.getMsgFirstOpen());
+                plugin.incrementLootsGenerated();
+            } else {
+                player.sendMessage(plugin.getPrefix() + plugin.getMsgAlreadyLooted());
+            }
+
+            player.openInventory(inv);
         }
     }
 
@@ -171,7 +245,7 @@ public class ChestListener implements Listener {
             event.setCancelled(true);
 
             if (plugin.isPlaySound()) {
-                player.playSound(block.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+                VersionCompat.playSound(player, block.getLocation(), "BLOCK_CHEST_OPEN", 1.0f, 1.0f);
             }
 
             if (firstTime) {
@@ -281,7 +355,7 @@ public class ChestListener implements Listener {
             lootManager.savePlayerLoot(holder.getChestKey(), holder.getStorageUuid(), inv.getContents());
 
             if (plugin.isPlaySound()) {
-                player.playSound(player.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
+                VersionCompat.playSound(player, player.getLocation(), "BLOCK_CHEST_CLOSE", 1.0f, 1.0f);
             }
 
             plugin.debug("Saved loot for " + player.getName());

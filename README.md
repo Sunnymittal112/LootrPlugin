@@ -31,26 +31,21 @@ Compatibility note:
 * Actual compatibility for future builds such as 26.2.x or 26.3.x still depends on Paper keeping those APIs binary-compatible.
 * The repository has been updated and validated against the currently published stable 26.1.2 Paper API.
 
-## Patch Update - May 5, 2026
+## Patch Update - July 26, 2026
 
-### Feature: Claim Protection Bypass
-This update introduces a major improvement to how Lootr interacts with land-claim and region-protection plugins such as GriefPrevention, WorldGuard, Lands, and Towny.
+### What changed in this patch
+This update expands Lootr’s container support and improves compatibility with newer server APIs.
 
-#### Problem Solved
-Previously, if a Lootr chest was located inside a protected claim or region (such as a server spawn, a player's house, or a protected dungeon), protection plugins would cancel the interaction, preventing players from opening the chest even though Lootr is designed to be accessible to everyone.
+#### New container support
+* Lootr now supports chests, barrels, and minecart chests.
+* Opening these containers now uses the same per-player loot flow and protection logic as regular Lootr chests.
 
-#### Solution Implemented
-* Dynamic Event Un-cancellation: The plugin now monitors for cancelled interactions at the highest priority. If it detects a player trying to open a Lootr chest in a protected area, it will override the cancellation.
-* Configurable Bypass: A new setting 'protection.bypass-protection' has been added to config.yml. When set to true, it enables this bypass logic.
-* Intelligent Filtering: The bypass logic automatically ignores shop chests (QuickShop, etc.) and containers with specific metadata or custom names to ensure that only legitimate Lootr chests are bypassed.
-* Performance Optimization: The chest verification logic has been refactored into efficient helper methods to ensure that high-traffic servers do not experience lag during interaction checks.
+#### Compatibility improvements
+* Added a compatibility layer for newer Paper/Bukkit API behavior.
+* Updated inventory creation and sound playback handling for better compatibility across modern server versions.
+* Improved loot-context handling so loot tables are generated more reliably.
+* Modernized admin command handling to avoid older deprecated lookup patterns.
 
-#### Configuration Addition
-Add or update the following in your config.yml:
-```yaml
-protection:
-  bypass-protection: true
-```
-
-#### Technical Note
-This update ensures that the "Always Accessible" philosophy of Lootr is maintained across all claim plugins while still respecting "Break Protections"—meaning players can open the chests in claims, but they still cannot destroy them.
+#### Build and manifest updates
+* The plugin package was verified successfully after these changes.
+* The project is now better aligned with modern Paper compatibility expectations while preserving existing functionality.

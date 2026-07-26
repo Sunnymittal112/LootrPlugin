@@ -114,12 +114,30 @@ public class LootrCommand implements CommandExecutor, TabCompleter {
             int count = lootManager.clearAllPlayerData();
             sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + "Cleared all! (" + count + " entries)");
         } else {
-            @SuppressWarnings("deprecation")
-            UUID uuid = Bukkit.getOfflinePlayer(args[1]).getUniqueId();
+            UUID uuid = resolvePlayerUuid(args[1]);
+            if (uuid == null) {
+                sender.sendMessage(plugin.getPrefix() + ChatColor.RED + "Player not found: " + args[1]);
+                return;
+            }
             int count = lootManager.clearPlayerData(uuid);
             sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + "Cleared " + args[1] + "! (" + count + " entries)");
         }
         lootManager.saveAllData();
+    }
+
+    private UUID resolvePlayerUuid(String playerName) {
+        Player online = Bukkit.getPlayerExact(playerName);
+        if (online != null) {
+            return online.getUniqueId();
+        }
+
+        for (Player candidate : Bukkit.getOnlinePlayers()) {
+            if (candidate.getName().equalsIgnoreCase(playerName)) {
+                return candidate.getUniqueId();
+            }
+        }
+
+        return null;
     }
 
     private void handleReset(CommandSender sender) {
