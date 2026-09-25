@@ -1,7 +1,9 @@
 package com.fetal.lootr.listeners;
 
+import com.ghostchu.quickshop.QuickShop;
+import com.ghostchu.quickshop.api.QuickShopAPI;
+import com.ghostchu.quickshop.api.shop.Shop;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
@@ -42,8 +44,7 @@ public class ChestListener implements Listener {
             plugin.getLogger().info("QuickShop-Hikari detected in ChestListener!");
 
             try {
-                Class<?> quickShopClass = Class.forName("com.ghostchu.quickshop.QuickShop");
-                quickShopAPI = quickShopClass.getMethod("getInstance").invoke(null);
+                quickShopAPI = QuickShop.getInstance();
                 plugin.getLogger().info("QuickShop API loaded successfully!");
             } catch (Exception e) {
                 plugin.getLogger().warning("QuickShop API loading failed: " + e.getMessage());
@@ -269,12 +270,7 @@ public class ChestListener implements Listener {
         // Method 1: Try QuickShop API
         if (quickShopAPI != null) {
             try {
-                Class<?> quickShopClass = quickShopAPI.getClass();
-                Object shopManager = quickShopClass.getMethod("getShopManager").invoke(quickShopAPI);
-                Object shop = shopManager.getClass()
-                        .getMethod("getShop", org.bukkit.Location.class)
-                        .invoke(shopManager, block.getLocation());
-
+                Shop<?,?> shop = ((QuickShopAPI)quickShopAPI).getShopManager().getShop(block.getLocation());
                 if (shop != null) {
                     plugin.debug("QuickShop API: Chest is a shop");
                     return true;
