@@ -6,7 +6,7 @@
 
     <groupId>com.fetal</groupId>
     <artifactId>LootrPlugin</artifactId>
-    <version>1.2.5</version>
+    <version>1.2.6</version>
     <packaging>jar</packaging>
 
     <name>LootrPlugin</name>
@@ -14,14 +14,20 @@
 
     <properties>
         <java.version>21</java.version>
-        <paper.version>1.21.11-R0.1-SNAPSHOT</paper.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <paper.version>[26.2.build.83,26.3.build.3)</paper.version>
+        <quickshop.version>6.3.0.3</quickshop.version>
     </properties>
 
     <repositories>
         <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>quickshop</id>
+            <url>https://repo.codemc.io/repository/ghost-chu/</url>
         </repository>
     </repositories>
 
@@ -30,6 +36,12 @@
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>${paper.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ghostchu</groupId>
+            <artifactId>quickshop-hikari</artifactId>
+            <version>${quickshop.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
