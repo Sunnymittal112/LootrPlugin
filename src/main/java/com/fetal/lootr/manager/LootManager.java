@@ -113,6 +113,20 @@ public class LootManager {
         return registeredChests.containsKey(key);
     }
 
+    public boolean setChestLootTable(String key, String lootTableKey) {
+        ChestData data = registeredChests.get(key);
+        if (data == null) return false;
+        registeredChests.put(key, new ChestData(lootTableKey, data.seed, data.invSize));
+        return true;
+    }
+
+    // Returns the normalized key (e.g. "minecraft:chests/simple_dungeon") or null if no such table exists
+    public String resolveLootTableKey(String input) {
+        NamespacedKey key = NamespacedKey.fromString(input.toLowerCase());
+        if (key == null || Bukkit.getLootTable(key) == null) return null;
+        return key.toString();
+    }
+
     // Per-player loot
     public Inventory getOrCreateLoot(String chestKey, Player player) {
         ChestData data = registeredChests.get(chestKey);
@@ -175,6 +189,24 @@ public class LootManager {
                 );
             }
             return false;
+        }
+    }
+
+    /**
+     * Rolls a loot table once into a throwaway inventory, the same way a Lootr chest would.
+     * Returns null if it works, or why it can't fill a container (e.g. a block or mob drop table that needs a tool or killer).
+     */
+    public String testLootTable(String lootTableKey, Location location, Player player, int invSize) {
+        NamespacedKey key = NamespacedKey.fromString(lootTableKey);
+        LootTable lootTable = key != null ? Bukkit.getLootTable(key) : null;
+        if (lootTable == null) return "unknown loot table";
+
+        try {
+            Inventory inv = Bukkit.createInventory(null, invSize);
+            lootTable.fillInventory(inv, new Random(), buildLootContext(location, player));
+            return null;
+        } catch (Exception e) {
+            return e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
         }
     }
 

@@ -8,8 +8,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
-import java.lang.reflect.Method;
-
 public final class VersionCompat {
 
     private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
@@ -35,20 +33,8 @@ public final class VersionCompat {
         }
     }
 
-    public static void playSound(Player player, Location location, String soundName, float volume, float pitch) {
-        try {
-            Method method = Player.class.getMethod("playSound", Location.class, String.class, float.class, float.class);
-            method.invoke(player, location, soundName, volume, pitch);
-            return;
-        } catch (ReflectiveOperationException ignored) {
-            // Fall back to the modern Sound enum overload if the server exposes it.
-        }
-
-        try {
-            Method method = Player.class.getMethod("playSound", Location.class, Enum.class, float.class, float.class);
-            method.invoke(player, location, Enum.valueOf((Class<Enum>) Class.forName("org.bukkit.Sound"), soundName), volume, pitch);
-        } catch (ReflectiveOperationException ex) {
-            player.getServer().getLogger().warning("Unsupported sound: " + soundName);
-        }
+    // soundKey is a sound key such as "block.chest.open"; Sound is no longer an enum on 26.x
+    public static void playSound(Player player, Location location, String soundKey, float volume, float pitch) {
+        player.playSound(location, soundKey, volume, pitch);
     }
 }

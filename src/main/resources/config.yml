@@ -6,6 +6,7 @@
 general:
   prefix: "&6[&eLootr&6] &r"
   debug: false
+  # Not used yet: there is no translation system. Player messages can be changed in the messages section below.
   language: "en"
 
 # ═══════════════════════════════════════════
@@ -29,15 +30,24 @@ compatibility:
     - "§"
   wait-for-quickshop: 5
 
+# Lootr does not create loot tables, it only reads tables the server has loaded.
+# Custom loot tables go in a datapack in your main world's datapacks folder
+# (the folder is printed in the console on startup):
+#   <world>/datapacks/<pack>/data/<namespace>/loot_table/chests/<name>.json
+# Then use them with /lootr register <namespace>:chests/<name>. See the README for details.
 loot:
   per-player-loot: true
   max-tracked-chests: 50000
+  # Tab-complete every vanilla loot table, not just chest and pot tables. Gameplay tables (fishing,
+  # cat gifts) and mob drop tables work in a chest; block and interaction tables don't, and register
+  # and settable refuse them. Some tables are empty (e.g. axolotl drops nothing). See the README.
+  # Any table can still be typed by name with this off.
+  suggest-all-vanilla-tables: false
   disabled-worlds:
     - "creative"
     - "lobby"
     - "hub"
     - "spawn"
-  allowed-loot-tables: []
 
 inventory:
   title: "&8[&6✦&8] &eLoot Chest"
@@ -54,16 +64,15 @@ protection:
 
 visuals:
   particles-enabled: true
-  particle-type: "VILLAGER_HAPPY"
+  particle-type: "HAPPY_VILLAGER"
   particles-only-unlooted: true
   particles-exclude-shops: true
-  glow-enabled: false
 
 storage:
   auto-save-interval: 5
-  create-backups: true
-  max-backups: 5
 
+# Set first-open or already-looted to "" to turn that message off.
+# already-looted only shows when the player's copy of the chest is empty.
 messages:
   first-open: "&aThis chest has unique loot just for you!"
   already-looted: "&7You have already looted this chest."

@@ -1,7 +1,0 @@
-/workspaces/LootrPlugin-main/src/main/java/com/fetal/lootr/LootrPlugin.java
-/workspaces/LootrPlugin-main/src/main/java/com/fetal/lootr/commands/LootrCommand.java
-/workspaces/LootrPlugin-main/src/main/java/com/fetal/lootr/listeners/ChestListener.java
-/workspaces/LootrPlugin-main/src/main/java/com/fetal/lootr/util/VersionCompat.java
-/workspaces/LootrPlugin-main/src/main/java/com/fetal/lootr/listeners/ChestProtectionListener.java
-/workspaces/LootrPlugin-main/src/main/java/com/fetal/lootr/LootrHolder.java
-/workspaces/LootrPlugin-main/src/main/java/com/fetal/lootr/manager/LootManager.java

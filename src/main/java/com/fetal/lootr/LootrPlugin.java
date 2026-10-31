@@ -2,16 +2,19 @@ package com.fetal.lootr;
 
 import com.fetal.lootr.commands.LootrCommand;
 import com.fetal.lootr.listeners.ChestListener;
+import com.fetal.lootr.listeners.GriefPreventionHook;
 import com.fetal.lootr.listeners.ChestProtectionListener;
 import com.fetal.lootr.manager.LootManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +22,7 @@ public class LootrPlugin extends JavaPlugin {
 
     private static LootrPlugin instance;
     private LootManager lootManager;
+    private ChestListener chestListener;
     private BukkitTask autoSaveTask;
     private BukkitTask particleTask;
 
@@ -27,6 +31,7 @@ public class LootrPlugin extends JavaPlugin {
     private boolean debug;
     private boolean perPlayerLoot;
     private int maxTrackedChests;
+    private boolean suggestAllVanillaTables;
     private List<String> disabledWorlds;
     private String inventoryTitle;
     private boolean playSound;
@@ -81,8 +86,9 @@ public class LootrPlugin extends JavaPlugin {
         // Load config
         loadConfigValues();
 
-        // Wait for QuickShop if configured
-        if (waitForQuickShop > 0 && !Bukkit.getPluginManager().isPluginEnabled("QuickShop-Hikari")) {
+        // Wait for QuickShop if configured, but only when it's installed and hasn't enabled yet
+        Plugin quickShop = Bukkit.getPluginManager().getPlugin("QuickShop-Hikari");
+        if (waitForQuickShop > 0 && quickShop != null && !quickShop.isEnabled()) {
             getLogger().info("Waiting for QuickShop-Hikari to load...");
             Bukkit.getScheduler().runTaskLater(this, () -> {
                 initializePlugin();
@@ -101,13 +107,15 @@ public class LootrPlugin extends JavaPlugin {
         lootManager.loadData();
 
         // Register listeners
-        getServer().getPluginManager().registerEvents(new ChestListener(this, lootManager), this);
+        chestListener = new ChestListener(this, lootManager);
+        getServer().getPluginManager().registerEvents(chestListener, this);
+        GriefPreventionHook.register(this, chestListener);
         getServer().getPluginManager().registerEvents(new ChestProtectionListener(this, lootManager), this);
 
         // Register commands
         PluginCommand cmd = getCommand("lootr");
         if (cmd != null) {
-            LootrCommand executor = new LootrCommand(this, lootManager);
+            LootrCommand executor = new LootrCommand(this, lootManager, chestListener);
             cmd.setExecutor(executor);
             cmd.setTabCompleter(executor);
         }
@@ -118,7 +126,12 @@ public class LootrPlugin extends JavaPlugin {
         // Banner
         printBanner();
 
-        getLogger().info("LootrPlugin enabled! Author: FeTaL");
+        // Where custom loot table datapacks go; Lootr only reads tables the server has loaded from there
+        Path datapacks = getServer().getLevelDirectory().resolve("datapacks");
+        getLogger().info("Loot table datapacks folder: " + getServer().getWorldContainer().toPath().toAbsolutePath()
+                .relativize(datapacks.toAbsolutePath()));
+
+        getLogger().info("LootrPlugin enabled! Authors: " + String.join(", ", getDescription().getAuthors()));
     }
 
     private void checkShopPlugins() {
@@ -137,6 +150,7 @@ public class LootrPlugin extends JavaPlugin {
     public void onDisable() {
         if (autoSaveTask != null) autoSaveTask.cancel();
         if (particleTask != null) particleTask.cancel();
+        if (chestListener != null) chestListener.closeAllLids();
 
         if (lootManager != null) {
             lootManager.saveAllData();
@@ -165,6 +179,7 @@ public class LootrPlugin extends JavaPlugin {
 
         perPlayerLoot = config.getBoolean("loot.per-player-loot", true);
         maxTrackedChests = config.getInt("loot.max-tracked-chests", 50000);
+        suggestAllVanillaTables = config.getBoolean("loot.suggest-all-vanilla-tables", false);
         disabledWorlds = config.getStringList("loot.disabled-worlds");
         if (disabledWorlds == null) disabledWorlds = new ArrayList<>();
 
@@ -179,7 +194,7 @@ public class LootrPlugin extends JavaPlugin {
         bypassProtection = config.getBoolean("protection.bypass-protection", true);
 
         particlesEnabled = config.getBoolean("visuals.particles-enabled", true);
-        particleType = config.getString("visuals.particle-type", "VILLAGER_HAPPY");
+        particleType = config.getString("visuals.particle-type", "HAPPY_VILLAGER");
         particlesOnlyUnlooted = config.getBoolean("visuals.particles-only-unlooted", true);
 
         autoSaveInterval = config.getInt("storage.auto-save-interval", 5);
@@ -226,7 +241,7 @@ public class LootrPlugin extends JavaPlugin {
 
     private void printBanner() {
         getLogger().info("╔═══════════════════════════════════════╗");
-        getLogger().info("║          LootrPlugin v1.2.5" + getDescription().getVersion() + "      ║");
+        getLogger().info("║          LootrPlugin v" + getDescription().getVersion() + "            ║");
         getLogger().info("║            Author: FeTaL              ║");
         getLogger().info("╠═══════════════════════════════════════╣");
         getLogger().info("║                                       ║");
@@ -266,6 +281,7 @@ public class LootrPlugin extends JavaPlugin {
     public boolean isDebug() { return debug; }
     public boolean isPerPlayerLoot() { return perPlayerLoot; }
     public int getMaxTrackedChests() { return maxTrackedChests; }
+    public boolean isSuggestAllVanillaTables() { return suggestAllVanillaTables; }
     public boolean isWorldDisabled(String world) { return disabledWorlds.contains(world); }
     public String getInventoryTitle() { return inventoryTitle; }
     public boolean isPlaySound() { return playSound; }
